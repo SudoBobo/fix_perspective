@@ -18,7 +18,6 @@ cd fix_perspective
 cmake CMakeLists.txt
 make
 ./fix_perspective image.jpg
-
 ```
 Result will be saved in fix_perspective/image_fixed.jpg
 
