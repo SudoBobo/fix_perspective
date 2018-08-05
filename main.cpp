@@ -49,14 +49,26 @@ int main( int argc, char** argv )
 	/// Load source image and convert it to gray
 	source = imread( argv[1], 1 );
 
-	/// Convert image to gray and blur it
-	cvtColor( source, src_gray, COLOR_BGR2GRAY );
-	blur( src_gray, src_gray, Size(3,3) );
+
 
 	/// Create Window
 	char* source_window = "Source";
 	namedWindow( source_window, WINDOW_AUTOSIZE );
 	imshow( source_window, source );
+
+	Point center = Point(source.cols/2, source.rows/2);
+	double angle = 180.0;
+	double scale = 1;
+	Mat rot_mat = getRotationMatrix2D( center, angle, scale );
+	warpAffine(source, source, rot_mat, source.size() );
+
+	source_window = "Source1";
+	namedWindow( source_window, WINDOW_AUTOSIZE );
+	imshow( source_window, source );
+
+	/// Convert image to gray and blur it
+	cvtColor( source, src_gray, COLOR_BGR2GRAY );
+	blur( src_gray, src_gray, Size(3,3) );
 
 	Mat canny_output;
 	std::vector<std::vector<Point>> contours;
@@ -77,7 +89,7 @@ int main( int argc, char** argv )
 		}
 	}
 
-	Mat contour_drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
+	Mat contour_drawing = Mat::zeros( canny_output.size(), CV_8UC3);
 	Scalar color = Scalar( 255, 255, 255);
 	drawContours(contour_drawing, contours, contour_id, color, 2, 8,
 		     hierarchy, 0, Point() );
@@ -191,57 +203,208 @@ int main( int argc, char** argv )
 
 
 
-	Mat dots = Mat::zeros( canny_output.size(), CV_8UC3 );
-	line( dots, left_top, left_bottom, Scalar(255,255,255), 1, CV_AA);
-	line( dots, left_bottom, right_bottom, Scalar(255,255,255), 1, CV_AA);
-	line( dots, right_bottom, right_top, Scalar(255,255,255), 1, CV_AA);
-	line( dots, right_top, left_top, Scalar(255,255,255), 1, CV_AA);
+//	Mat schema = Mat::zeros( canny_output.size(), CV_8UC3 );
+	Mat schema = source;
+	line( schema, left_top, left_bottom, Scalar(255,255,255), 1, CV_AA);
+	line( schema, left_bottom, right_bottom, Scalar(255,255,255), 1, CV_AA);
+	line( schema, right_bottom, right_top, Scalar(255,255,255), 1, CV_AA);
+	line( schema, right_top, left_top, Scalar(255,255,255), 1, CV_AA);
 
-	imshow("Detected Lines (in red) - Standard Hough Line Transform", dots);
-
+	Scalar blue (255, 0, 0);
 
 	// diags intersection
 	Point2f* diags_intersection = intersection(left_top, right_bottom,
 						   right_top, left_bottom);
 
+	circle(schema, *diags_intersection, 2, blue);
+
+//	line( schema, right_bottom, left_top, red, 1, CV_AA);
+//	line( schema, right_top, left_bottom, red, 1, CV_AA);
 
 	Point2f corner_points_mass_center =
 		(left_top + left_bottom + right_bottom + right_top) / 4;
 
+	circle(schema, corner_points_mass_center, 2, Scalar(255, 255, 255));
+
+
 	// todo check what should be taken dX = mass - diag or dX = diag - mass
 	double top_width = right_top.x - left_top.x;
 	double bottom_width = right_bottom.x - left_bottom.x;
-	double dX = corner_points_mass_center.x - diags_intersection->x;
+//	double dX = corner_points_mass_center.x - diags_intersection->x;
+	double dX = diags_intersection->x - corner_points_mass_center.x;
+//
 	double fixed_width = (top_width + bottom_width) / 2 + 2 * dX;
 
 	double left_height = left_top.y - left_bottom.y;
 	double right_height = right_top.y - right_bottom.y;
-	double dY = corner_points_mass_center.y - diags_intersection->y;
+//	double dY = corner_points_mass_center.y - diags_intersection->y;
+	double dY = diags_intersection->y - corner_points_mass_center.y;
+
 	double fixed_higth = (left_height + right_height) /2 + 2 * dY;
 
-	Point2f fixed_rt (right_bottom.x, right_bottom.y + fixed_higth);
-	Point2f fixed_lt (left_bottom.x, left_bottom.y + fixed_higth);
 
 	// new lt, new rt, new central
 	Mat warp_dst = Mat::zeros(source.rows, source.cols, source.type());
 	Point2f srcTri[3];
 	Point2f dstTri[3];
 
-	srcTri[0] = right_top;
-	srcTri[1] = left_top;
-	srcTri[2] = *diags_intersection;
+	// todo working
+//	Point2f fixed_rt (right_bottom.x, right_bottom.y + fixed_higth);
+//	Point2f fixed_lt (left_bottom.x, left_bottom.y + fixed_higth);
+//	srcTri[0] = right_top;
+//	srcTri[1] = left_top;
+//	srcTri[2] = *diags_intersection;
+//
+//	dstTri[0] = fixed_rt;
+//	dstTri[1] = fixed_lt;
+//	dstTri[2] = corner_points_mass_center;
 
-	dstTri[0] = fixed_rt;
-	dstTri[1] = fixed_lt;
-	dstTri[2] = corner_points_mass_center;
-	Mat warp_mat = getAffineTransform( srcTri, dstTri );
+	// todo not working but fun
 
-	warp_mat = getAffineTransform( srcTri, dstTri );
-	warpAffine( source, warp_dst, warp_mat, warp_dst.size() );
+	//	dstTri[0] = Point2f(right_bottom.x, right_top.y);
+//	dstTri[1] = Point2f(left_bottom.x, left_bottom.y);
+//	dstTri[2] = corner_points_mass_center;
 
-//	const char* warp_window = "Warp";
-//	namedWindow( warp_window, WINDOW_AUTOSIZE );
-//	imshow( warp_window, warp_dst );
+	// todo best but not working
+//	srcTri[0] = right_top;
+//	srcTri[1] = left_bottom;
+//	srcTri[2] = *diags_intersection;
+//
+//
+//	dstTri[0] = Point2f(
+//		(corner_points_mass_center.x + fixed_width / 2),
+//		(corner_points_mass_center.y + fixed_higth / 2));
+//	dstTri[1] = Point2f(
+//		(corner_points_mass_center.x - fixed_width / 2),
+//		(corner_points_mass_center.y - fixed_higth / 2));
+//	dstTri[2] = corner_points_mass_center;
+
+	srcTri[0] = right_bottom;
+	srcTri[1] = right_top;
+	srcTri[2] = left_top;
+	srcTri[3] = left_bottom;
+
+	dstTri[0] = Point2f(
+		(corner_points_mass_center.x + fixed_width / 2),
+		(corner_points_mass_center.y - fixed_higth / 2));
+	dstTri[1] = Point2f(
+		(corner_points_mass_center.x + fixed_width / 2),
+		(corner_points_mass_center.y + fixed_higth / 2));
+	dstTri[2] = Point2f(
+		(corner_points_mass_center.x - fixed_width / 2),
+		(corner_points_mass_center.y + fixed_higth / 2));
+
+	dstTri[3] = Point2f(
+		(corner_points_mass_center.x - fixed_width / 2),
+		(corner_points_mass_center.y - fixed_higth / 2));
+
+
+	Scalar red (0, 0, 255);
+	Scalar green(0, 255, 0);
+
+	circle(schema, srcTri[0], 2, red);
+	circle(schema, srcTri[1], 2, green);
+
+
+//	srcTri[0] = left_bottom;
+//	srcTri[1] = right_bottom;
+//	srcTri[2] = *diags_intersection;
+//
+//	dstTri[0] = Point2f(left_top.x, right_bottom.y);
+//	dstTri[1] = Point2f(right_top.x, right_bottom.y);
+//	dstTri[2] = corner_points_mass_center;
+//
+
+
+//	srcTri[0] = right_top;
+//	srcTri[1] = left_top;
+//	srcTri[0] = left_bottom;
+//	srcTri[1] = right_bottom;
+//	srcTri[0] = right_top;
+//	srcTri[1] = left_bottom;
+//	srcTri[2] = *diags_intersection;
+//
+////	dstTri[0] = fixed_rt;
+////	dstTri[1] = fixed_lt;
+//	dstTri[0] = Point2f(corner_points_mass_center.x + fixed_width / 2,
+//			    corner_points_mass_center.y + fixed_higth / 2);
+//	dstTri[1] = Point2f(corner_points_mass_center.x - fixed_width / 2,
+//			    corner_points_mass_center.y - fixed_higth / 2);
+//	dstTri[2] = corner_points_mass_center;
+
+//	circle(schema, fixed_rt, 10, red);
+//	circle(schema, fixed_lt, 10, red);
+
+//	line( schema, fixed_lt, left_bottom, red, 1, CV_AA);
+//	line( schema, dstTri[0], dstTri[1], red, 1, CV_AA);
+//
+//	line( schema, left_bottom, right_bottom, red, 1, CV_AA);
+//	line( schema, right_bottom, fixed_rt, red, 1, CV_AA);
+//	line( schema, fixed_rt, left_top, red, 1, CV_AA);
+//
+//	line( schema, right_bottom, fixed_lt, red, 1, CV_AA);
+//	line( schema, fixed_rt, left_bottom, red, 1, CV_AA);
+
+
+	imshow("Detected Lines (in red) - Standard Hough Line Transform", schema);
+
+
+//	Mat warp_mat = getAffineTransform( srcTri, dstTri );
+	Mat warp_p_mat = getPerspectiveTransform(srcTri, dstTri);
+
+//	warp_mat = getAffineTransform( srcTri, dstTri );
+//	warpAffine( source, warp_dst, warp_mat, warp_dst.size() );
+//	warpAffine( source, warp_dst, warp_mat, source.size() );
+
+	warpPerspective(source, warp_dst, warp_p_mat, warp_dst.size());
+
+
+	circle(warp_dst, dstTri[0], 10, red);
+	circle(warp_dst, dstTri[1], 10, green);
+	circle(warp_dst, dstTri[2], 10, blue);
+
+//	Point2f rt2, rb2, lt2, lb2;
+//	rt2 = dstTri[0];
+//	lb2 = dstTri[1];
+//	rb2 = Point2f(rt2.x, rt2.y - fixed_higth);
+//	lt2 = Point2f(lb2.x, lb2.y + fixed_higth);
+//
+//	line( warp_dst, lb2, rb2, red, 1, CV_AA);
+//	line( warp_dst, rb2, rt2, red, 1, CV_AA);
+//	line( warp_dst, rt2, lt2, red, 1, CV_AA);
+//	line( warp_dst, lt2, lb2, red, 1, CV_AA);
+
+//	srcTri[0] = right_bottom;
+//	srcTri[1] = right_top;
+//	srcTri[2] = *diags_intersection;
+//
+//	dstTri[0] = Point2f(
+//		(corner_points_mass_center.x + fixed_width / 2),
+//		(corner_points_mass_center.y - fixed_higth / 2));
+//	dstTri[1] = Point2f(
+//		(corner_points_mass_center.x + fixed_width / 2),
+//		(corner_points_mass_center.y + fixed_higth / 2));
+//	dstTri[2] = corner_points_mass_center;
+
+
+
+
+	const char* warp_window = "Warp";
+	namedWindow( warp_window, WINDOW_AUTOSIZE );
+	imshow( warp_window, warp_dst );
+
+	center = Point(warp_dst.cols/2, warp_dst.rows/2);
+	angle = 180.0;
+	scale = 1;
+	rot_mat = getRotationMatrix2D( center, angle, scale );
+	warpAffine(warp_dst, warp_dst, rot_mat, warp_dst.size() );
+
+	std::string fixed_filename =  argv[1];
+	fixed_filename = fixed_filename.substr (0, fixed_filename.size() - 4);
+
+	fixed_filename.append("_fixed.jpg");
+	std::cout << fixed_filename << std::endl;
+	imwrite(fixed_filename, warp_dst );
 
 	waitKey(0);
 
