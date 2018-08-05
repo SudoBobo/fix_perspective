@@ -2,15 +2,6 @@
 
 Simple program which fix photo perspective (from "trapeze" perspective to "scan-like")
 Tested with `.jpg` images with dark background. Made for educational purposes using OpenCV.
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/2.jpg)
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/2_fixed.jpg)
-
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/v3.jpg)
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/v3_fixed.jpg)
-
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/z.jpg)
-![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/z_fixed.jpg)
-
 
 ### Requirements
 ```
@@ -30,3 +21,14 @@ make
 
 ```
 Result will be saved in fix_perspective/image_fixed.jpg
+
+### Exmaples
+
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/2.jpg)
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/2_fixed.jpg)
+
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/v3.jpg)
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/v3_fixed.jpg)
+
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/z.jpg)
+![alt text](https://github.com/SudoBobo/fix_perspective/blob/master/example/z_fixed.jpg)
