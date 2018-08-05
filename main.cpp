@@ -112,14 +112,6 @@ int main( int argc, char** argv )
 //		line( cdst, pt1, pt2, Scalar(255,255,255), 1, CV_AA);
 	}
 
-//	imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-
-	// find sides
-	// put all vertical in one vec
-//	var verticalSegments = segments
-//				       .Where(s => Math.Abs(s.P1.X - s.P2.X) < Math.Abs(s.P1.Y - s.P2.Y))
-//	.ToArray();
-
 	// put all horizon
 	// find corner dotes
 	std::vector<Point2f> intersection_points;
@@ -148,42 +140,6 @@ int main( int argc, char** argv )
 
 	mass_center /= (double) intersection_points.size();
 
-//	Point2f* lt = NULL;
-//	Point2f* rb = NULL;
-//	Point2f* lb = NULL;
-//	Point2f* rt = NULL;
-//
-//	for (int i = 0; i < intersection_points.size(); i++) {
-//		if (lt == NULL)
-//			lt = new_point;
-//		if (rb == NULL)
-//			rb = new_point;
-//		if (lb == NULL)
-//			lb = new_point;
-//		if (rt == NULL)
-//			rt = new_point;
-//
-//		if ((new_point->x <= lt->x) && (new_point->y >= lt->y)) {
-//			lt = new_point;
-//		}
-//
-//		if ((new_point->x <= lb->x) && (new_point->y <= lb->y)) {
-//			lb = new_point;
-//		}
-//
-//		if ((new_point->x >= rb->x) && (new_point->y <= rb->y)) {
-//			rb = new_point;
-//		}
-//
-//		if ((new_point->x >= rt->x) && (new_point->y >= rt->y)) {
-//			rt = new_point;
-//		}
-//	}
-//}
-
-//	imshow("Detected Lines (in red) - Standard Hough Line Transform", cdst);
-
-
 	// todo check that points operations work as expected
 
 	// todo before first launch perform an amount of visual checks
@@ -199,23 +155,9 @@ int main( int argc, char** argv )
 	int rt_size = 0;
 	int rb_size = 0;
 
-	// 0 - distanse to lt
-	// 1 - distanse to lb
-	// 2 - distanse to rt
-	// 3 - distanse to rb
 	double d[4];
 	for (int i = 0; i < intersection_points.size(); i++) {
 		Point2f* p = &intersection_points[i];
-//		d[0] = distanse(lt, p);
-//		d[1] = distanse(lb, p);
-//		d[2] = distanse(rt, p);
-//		d[3] = distanse(rb, p);
-
-//		for (int j = 0; j < 4; j++) {
-//			std::cout << d[j] << " ";
-//		}
-//
-//		std::cout << std::endl;
 		if ((p->x > mass_center.x) && (p->y > mass_center.y)) {
 			rt_size++;
 			right_top += *p;
@@ -235,38 +177,12 @@ int main( int argc, char** argv )
 			lb_size++;
 			left_bottom += *p;
 		}
-
-//		double min = *std::min_element(d, d + 4);
-//		if (same(min, d[0])) {
-//			lt_size++;
-//			left_top += *p;
-//		}
-//
-//		if (same(min, d[1])) {
-//			lb_size++;
-//			left_bottom += *p;
-//		}
-//
-//		if (same(min, d[2])) {
-//			rt_size++;
-//			right_top += *p;
-//		}
-//
-//		if (same(min, d[3])) {
-//			rb_size++;
-//			right_bottom += *p;
-//		}
 	}
 
 	left_top /= lt_size;
 	left_bottom /= lb_size;
 	right_top /= rt_size;
 	right_bottom /= rb_size;
-
-//	std::cout << left_top << std::endl;
-//	std::cout << left_bottom << std::endl;
-//	std::cout << right_bottom << std::endl;
-//	std::cout << right_top << std::endl;
 
 	std::cout << "lt " << left_top << std::endl;
 	std::cout << "lb " << left_bottom << std::endl;
