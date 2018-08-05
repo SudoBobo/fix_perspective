@@ -6,15 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cmath>
-//#include <tclDecls.h>
 
 using namespace cv;
 //using namespace std;
 
 Mat source; Mat src_gray;
 int thresh = 100;
-int max_thresh = 255;
-RNG rng(12345);
 
 // Finds the intersection of two lines, or returns false.
 // The lines are defined by (o1, p1) and (o2, p2).
@@ -33,38 +30,15 @@ Point2f* intersection(Point2f o1, Point2f p1, Point2f o2, Point2f p2)
 	return new Point2f(r);
 }
 
-double distanse(Point2f* p1, Point2f* p2) {
-	return std::sqrt(std::pow((p2->x - p1->x), 2) +
-			 std::pow((p2->y - p1->y), 2));
-}
-
-bool same(double a, double b)
-{
-	return fabs(a - b) < 0.0001;
-}
-
-/** @function main */
 int main( int argc, char** argv )
 {
-	/// Load source image and convert it to gray
 	source = imread( argv[1], 1 );
-
-
-
-	/// Create Window
-	char* source_window = "Source";
-	namedWindow( source_window, WINDOW_AUTOSIZE );
-	imshow( source_window, source );
 
 	Point center = Point(source.cols/2, source.rows/2);
 	double angle = 180.0;
 	double scale = 1;
 	Mat rot_mat = getRotationMatrix2D( center, angle, scale );
 	warpAffine(source, source, rot_mat, source.size() );
-
-	source_window = "Source1";
-	namedWindow( source_window, WINDOW_AUTOSIZE );
-	imshow( source_window, source );
 
 	/// Convert image to gray and blur it
 	cvtColor( source, src_gray, COLOR_BGR2GRAY );
@@ -121,7 +95,6 @@ int main( int argc, char** argv )
 			vertical_lines.push_back(new_pair);
 		else
 			horizontal_lines.push_back(new_pair);
-//		line( cdst, pt1, pt2, Scalar(255,255,255), 1, CV_AA);
 	}
 
 	// put all horizon
@@ -141,8 +114,6 @@ int main( int argc, char** argv )
 			new_point = intersection(vertical_1, vertical_2,
 						 horizontal_1, horizontal_2);
 
-//			circle(cdst, *new_point, 2, color);
-
 			if (new_point != NULL) {
 				intersection_points.push_back(*new_point);
 				mass_center += *new_point;
@@ -151,11 +122,6 @@ int main( int argc, char** argv )
 	}
 
 	mass_center /= (double) intersection_points.size();
-
-	// todo check that points operations work as expected
-
-	// todo before first launch perform an amount of visual checks
-
 	// reduce corner point to amount of four
 	Point2f left_top(0, 0);
 	Point2f left_bottom(0, 0);
@@ -196,48 +162,23 @@ int main( int argc, char** argv )
 	right_top /= rt_size;
 	right_bottom /= rb_size;
 
-	std::cout << "lt " << left_top << std::endl;
-	std::cout << "lb " << left_bottom << std::endl;
-	std::cout << "rt " << right_top << std::endl;
-	std::cout << "rb " << right_bottom << std::endl;
-
-
-
-//	Mat schema = Mat::zeros( canny_output.size(), CV_8UC3 );
 	Mat schema = source;
-	line( schema, left_top, left_bottom, Scalar(255,255,255), 1, CV_AA);
-	line( schema, left_bottom, right_bottom, Scalar(255,255,255), 1, CV_AA);
-	line( schema, right_bottom, right_top, Scalar(255,255,255), 1, CV_AA);
-	line( schema, right_top, left_top, Scalar(255,255,255), 1, CV_AA);
-
-	Scalar blue (255, 0, 0);
 
 	// diags intersection
 	Point2f* diags_intersection = intersection(left_top, right_bottom,
 						   right_top, left_bottom);
 
-	circle(schema, *diags_intersection, 2, blue);
-
-//	line( schema, right_bottom, left_top, red, 1, CV_AA);
-//	line( schema, right_top, left_bottom, red, 1, CV_AA);
-
 	Point2f corner_points_mass_center =
 		(left_top + left_bottom + right_bottom + right_top) / 4;
 
-	circle(schema, corner_points_mass_center, 2, Scalar(255, 255, 255));
-
-
-	// todo check what should be taken dX = mass - diag or dX = diag - mass
 	double top_width = right_top.x - left_top.x;
 	double bottom_width = right_bottom.x - left_bottom.x;
-//	double dX = corner_points_mass_center.x - diags_intersection->x;
 	double dX = diags_intersection->x - corner_points_mass_center.x;
-//
+
 	double fixed_width = (top_width + bottom_width) / 2 + 2 * dX;
 
 	double left_height = left_top.y - left_bottom.y;
 	double right_height = right_top.y - right_bottom.y;
-//	double dY = corner_points_mass_center.y - diags_intersection->y;
 	double dY = diags_intersection->y - corner_points_mass_center.y;
 
 	double fixed_higth = (left_height + right_height) /2 + 2 * dY;
@@ -247,37 +188,6 @@ int main( int argc, char** argv )
 	Mat warp_dst = Mat::zeros(source.rows, source.cols, source.type());
 	Point2f srcTri[3];
 	Point2f dstTri[3];
-
-	// todo working
-//	Point2f fixed_rt (right_bottom.x, right_bottom.y + fixed_higth);
-//	Point2f fixed_lt (left_bottom.x, left_bottom.y + fixed_higth);
-//	srcTri[0] = right_top;
-//	srcTri[1] = left_top;
-//	srcTri[2] = *diags_intersection;
-//
-//	dstTri[0] = fixed_rt;
-//	dstTri[1] = fixed_lt;
-//	dstTri[2] = corner_points_mass_center;
-
-	// todo not working but fun
-
-	//	dstTri[0] = Point2f(right_bottom.x, right_top.y);
-//	dstTri[1] = Point2f(left_bottom.x, left_bottom.y);
-//	dstTri[2] = corner_points_mass_center;
-
-	// todo best but not working
-//	srcTri[0] = right_top;
-//	srcTri[1] = left_bottom;
-//	srcTri[2] = *diags_intersection;
-//
-//
-//	dstTri[0] = Point2f(
-//		(corner_points_mass_center.x + fixed_width / 2),
-//		(corner_points_mass_center.y + fixed_higth / 2));
-//	dstTri[1] = Point2f(
-//		(corner_points_mass_center.x - fixed_width / 2),
-//		(corner_points_mass_center.y - fixed_higth / 2));
-//	dstTri[2] = corner_points_mass_center;
 
 	srcTri[0] = right_bottom;
 	srcTri[1] = right_top;
@@ -299,99 +209,10 @@ int main( int argc, char** argv )
 		(corner_points_mass_center.y - fixed_higth / 2));
 
 
-	Scalar red (0, 0, 255);
-	Scalar green(0, 255, 0);
-
-	circle(schema, srcTri[0], 2, red);
-	circle(schema, srcTri[1], 2, green);
-
-
-//	srcTri[0] = left_bottom;
-//	srcTri[1] = right_bottom;
-//	srcTri[2] = *diags_intersection;
-//
-//	dstTri[0] = Point2f(left_top.x, right_bottom.y);
-//	dstTri[1] = Point2f(right_top.x, right_bottom.y);
-//	dstTri[2] = corner_points_mass_center;
-//
-
-
-//	srcTri[0] = right_top;
-//	srcTri[1] = left_top;
-//	srcTri[0] = left_bottom;
-//	srcTri[1] = right_bottom;
-//	srcTri[0] = right_top;
-//	srcTri[1] = left_bottom;
-//	srcTri[2] = *diags_intersection;
-//
-////	dstTri[0] = fixed_rt;
-////	dstTri[1] = fixed_lt;
-//	dstTri[0] = Point2f(corner_points_mass_center.x + fixed_width / 2,
-//			    corner_points_mass_center.y + fixed_higth / 2);
-//	dstTri[1] = Point2f(corner_points_mass_center.x - fixed_width / 2,
-//			    corner_points_mass_center.y - fixed_higth / 2);
-//	dstTri[2] = corner_points_mass_center;
-
-//	circle(schema, fixed_rt, 10, red);
-//	circle(schema, fixed_lt, 10, red);
-
-//	line( schema, fixed_lt, left_bottom, red, 1, CV_AA);
-//	line( schema, dstTri[0], dstTri[1], red, 1, CV_AA);
-//
-//	line( schema, left_bottom, right_bottom, red, 1, CV_AA);
-//	line( schema, right_bottom, fixed_rt, red, 1, CV_AA);
-//	line( schema, fixed_rt, left_top, red, 1, CV_AA);
-//
-//	line( schema, right_bottom, fixed_lt, red, 1, CV_AA);
-//	line( schema, fixed_rt, left_bottom, red, 1, CV_AA);
-
-
-	imshow("Detected Lines (in red) - Standard Hough Line Transform", schema);
-
-
-//	Mat warp_mat = getAffineTransform( srcTri, dstTri );
 	Mat warp_p_mat = getPerspectiveTransform(srcTri, dstTri);
-
-//	warp_mat = getAffineTransform( srcTri, dstTri );
-//	warpAffine( source, warp_dst, warp_mat, warp_dst.size() );
-//	warpAffine( source, warp_dst, warp_mat, source.size() );
 
 	warpPerspective(source, warp_dst, warp_p_mat, warp_dst.size());
 
-
-	circle(warp_dst, dstTri[0], 10, red);
-	circle(warp_dst, dstTri[1], 10, green);
-	circle(warp_dst, dstTri[2], 10, blue);
-
-//	Point2f rt2, rb2, lt2, lb2;
-//	rt2 = dstTri[0];
-//	lb2 = dstTri[1];
-//	rb2 = Point2f(rt2.x, rt2.y - fixed_higth);
-//	lt2 = Point2f(lb2.x, lb2.y + fixed_higth);
-//
-//	line( warp_dst, lb2, rb2, red, 1, CV_AA);
-//	line( warp_dst, rb2, rt2, red, 1, CV_AA);
-//	line( warp_dst, rt2, lt2, red, 1, CV_AA);
-//	line( warp_dst, lt2, lb2, red, 1, CV_AA);
-
-//	srcTri[0] = right_bottom;
-//	srcTri[1] = right_top;
-//	srcTri[2] = *diags_intersection;
-//
-//	dstTri[0] = Point2f(
-//		(corner_points_mass_center.x + fixed_width / 2),
-//		(corner_points_mass_center.y - fixed_higth / 2));
-//	dstTri[1] = Point2f(
-//		(corner_points_mass_center.x + fixed_width / 2),
-//		(corner_points_mass_center.y + fixed_higth / 2));
-//	dstTri[2] = corner_points_mass_center;
-
-
-
-
-	const char* warp_window = "Warp";
-	namedWindow( warp_window, WINDOW_AUTOSIZE );
-	imshow( warp_window, warp_dst );
 
 	center = Point(warp_dst.cols/2, warp_dst.rows/2);
 	angle = 180.0;
@@ -405,8 +226,6 @@ int main( int argc, char** argv )
 	fixed_filename.append("_fixed.jpg");
 	std::cout << fixed_filename << std::endl;
 	imwrite(fixed_filename, warp_dst );
-
-	waitKey(0);
 
 	return(0);
 }
