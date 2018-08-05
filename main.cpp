@@ -21,7 +21,7 @@ Point2f *intersection(const Point2f &o1, const Point2f &p1, const Point2f &o2, c
 
 	float cross = d1.x * d2.y - d1.y * d2.x;
 	if (abs(cross) < 1e-8)
-		return NULL;
+		return nullptr;
 
 	float t1 = (x.x * d2.y - x.y * d2.x) / cross;
 	Point2f r = o1 + d1 * t1;
@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
 	std::vector<std::pair<Point2f, Point2f>> horizontal_lines;
 	HoughLines(dst, lines, 1, CV_PI / 180, 150, 0, 0);
 
-	for (size_t i = 0; i < lines.size(); i++) {
-		float rho = lines[i][0];
-		float theta = lines[i][1];
+	for (auto &line : lines) {
+		float rho = line[0];
+		float theta = line[1];
 		Point2f pt1(0, 0);
 		Point2f pt2(0, 0);
 		double a = cos(theta);
@@ -118,18 +118,18 @@ int main(int argc, char **argv) {
 	std::vector<Point2f> intersection_points;
 	Point2f *new_point;
 	Point2f mass_center(0, 0);
-	for (int i = 0; i < vertical_lines.size(); i++) {
-		for (int j = 0; j < horizontal_lines.size(); j++) {
-			Point2f vertical_1 = vertical_lines[i].first;
-			Point2f vertical_2 = vertical_lines[i].second;
+	for (auto &vertical_line : vertical_lines) {
+		for (auto &horizontal_line : horizontal_lines) {
+			Point2f vertical_1 = vertical_line.first;
+			Point2f vertical_2 = vertical_line.second;
 
-			Point2f horizontal_1 = horizontal_lines[j].first;
-			Point2f horizontal_2 = horizontal_lines[j].second;
+			Point2f horizontal_1 = horizontal_line.first;
+			Point2f horizontal_2 = horizontal_line.second;
 
 			new_point = intersection(vertical_1, vertical_2,
 						 horizontal_1, horizontal_2);
 
-			if (new_point != NULL) {
+			if (new_point != nullptr) {
 				intersection_points.push_back(*new_point);
 				mass_center += *new_point;
 			}
@@ -147,26 +147,26 @@ int main(int argc, char **argv) {
 	int rt_size = 0;
 	int rb_size = 0;
 
-	for (int i = 0; i < intersection_points.size(); i++) {
-		Point2f *p = &intersection_points[i];
-		if ((p->x > mass_center.x) && (p->y > mass_center.y)) {
+	for (auto &intersection_point : intersection_points) {
+		Point2f &p = intersection_point;
+		if ((p.x > mass_center.x) && (p.y > mass_center.y)) {
 			rt_size++;
-			right_top += *p;
+			right_top += p;
 		}
 
-		if ((p->x > mass_center.x) && (p->y < mass_center.y)) {
+		if ((p.x > mass_center.x) && (p.y < mass_center.y)) {
 			rb_size++;
-			right_bottom += *p;
+			right_bottom += p;
 		}
 
-		if ((p->x < mass_center.x) && (p->y > mass_center.y)) {
+		if ((p.x < mass_center.x) && (p.y > mass_center.y)) {
 			lt_size++;
-			left_top += *p;
+			left_top += p;
 		}
 
-		if ((p->x < mass_center.x) && (p->y < mass_center.y)) {
+		if ((p.x < mass_center.x) && (p.y < mass_center.y)) {
 			lb_size++;
-			left_bottom += *p;
+			left_bottom += p;
 		}
 	}
 
